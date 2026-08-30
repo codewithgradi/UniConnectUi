@@ -2,6 +2,42 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import {
+  Briefcase,
+  Users,
+  Eye,
+  CheckCircle2,
+  Clock,
+  TrendingUp,
+  PlusCircle,
+  Building2,
+  Globe,
+  FileText,
+  Search,
+  MessageSquare,
+  Heart,
+  ChevronRight,
+  Sun,
+  Moon,
+  ExternalLink,
+  ShieldCheck,
+  Send,
+} from "lucide-react";
 
 // --- DOMAIN ENUMS & TYPES ---
 
@@ -92,6 +128,26 @@ export interface BusinessAnalyticsDto {
   topListings: JobListingPerformanceDto[];
 }
 
+// --- RECHARTS MOCK DATA ---
+
+const engagementTrendData = [
+  { month: "Mar", applications: 24, views: 110 },
+  { month: "Apr", applications: 35, views: 180 },
+  { month: "May", applications: 48, views: 240 },
+  { month: "Jun", applications: 62, views: 320 },
+  { month: "Jul", applications: 95, views: 490 },
+  { month: "Aug", applications: 148, views: 620 },
+];
+
+const applicantDistributionData = [
+  { name: "BSc IT", value: 68 },
+  { name: "Diploma IT", value: 42 },
+  { name: "BCom Info Sys", value: 26 },
+  { name: "Alumni / Postgrad", value: 12 },
+];
+
+const COLORS = ["#00A8E8", "#007EA7", "#003459", "#00171F"];
+
 // --- ATOMIC UI PRIMITIVES ---
 
 function Card({
@@ -103,7 +159,7 @@ function Card({
 }) {
   return (
     <div
-      className={`rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A192F] text-black dark:text-slate-100 shadow-sm transition-colors ${className}`}
+      className={`rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-[#0A192F]/90 backdrop-blur-md text-slate-900 dark:text-slate-100 shadow-xl shadow-slate-200/50 dark:shadow-none transition-all duration-300 ${className}`}
     >
       {children}
     </div>
@@ -118,7 +174,9 @@ function CardHeader({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`flex flex-col space-y-1.5 p-5 md:p-6 ${className}`}>
+    <div
+      className={`flex flex-col space-y-1.5 p-6 border-b border-slate-100 dark:border-slate-800/80 ${className}`}
+    >
       {children}
     </div>
   );
@@ -133,7 +191,7 @@ function CardTitle({
 }) {
   return (
     <h3
-      className={`text-base md:text-lg font-bold leading-none text-black dark:text-white ${className}`}
+      className={`text-lg font-extrabold tracking-tight text-slate-900 dark:text-white ${className}`}
     >
       {children}
     </h3>
@@ -149,7 +207,7 @@ function CardDescription({
 }) {
   return (
     <p
-      className={`text-xs font-semibold text-slate-600 dark:text-slate-400 ${className}`}
+      className={`text-xs font-medium text-slate-500 dark:text-slate-400 ${className}`}
     >
       {children}
     </p>
@@ -163,27 +221,28 @@ function CardContent({
   className?: string;
   children: React.ReactNode;
 }) {
-  return <div className={`p-5 md:p-6 pt-0 ${className}`}>{children}</div>;
+  return <div className={`p-6 ${className}`}>{children}</div>;
 }
 
 function Badge({ status }: { status: OpportunityStatus | string }) {
   const styles: Record<string, string> = {
     [OpportunityStatus.PendingApproval]:
-      "bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-400 border-amber-300 dark:border-amber-900",
+      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
     [OpportunityStatus.Published]:
-      "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 border-emerald-300 dark:border-emerald-900",
+      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
     [OpportunityStatus.Rejected]:
-      "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900",
+      "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
     [OpportunityStatus.Closed]:
-      "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700",
+      "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
   };
 
   const currentStyle = styles[status] || styles[OpportunityStatus.Closed];
 
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] md:text-xs font-bold font-mono ${currentStyle}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-bold tracking-wide ${currentStyle}`}
     >
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
       {status === OpportunityStatus.PendingApproval ? "Pending Review" : status}
     </span>
   );
@@ -198,17 +257,18 @@ function Button({
   variant?: "default" | "outline" | "secondary";
 }) {
   const base =
-    "inline-flex items-center justify-center rounded-md text-xs md:text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8] disabled:opacity-50 active:scale-[0.98]";
+    "inline-flex items-center justify-center gap-2 rounded-xl text-xs md:text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8] disabled:opacity-50 active:scale-[0.98]";
   const variants = {
-    default: "bg-[#00A8E8] text-black hover:bg-[#0096D1] shadow-sm",
+    default:
+      "bg-gradient-to-r from-[#00A8E8] to-[#007EA7] text-white shadow-lg shadow-[#00A8E8]/25 hover:brightness-110",
     outline:
-      "border border-slate-300 dark:border-slate-700 bg-white dark:bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-black dark:text-slate-200",
+      "border border-slate-300 dark:border-slate-700 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-800 dark:text-slate-200",
     secondary:
-      "bg-slate-100 dark:bg-slate-800 text-black dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700",
+      "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700",
   };
   return (
     <button
-      className={`${base} ${variants[variant]} h-9 px-4 py-2 ${className}`}
+      className={`${base} ${variants[variant]} h-10 px-4 py-2 ${className}`}
       {...props}
     >
       {children}
@@ -343,7 +403,7 @@ const mockPosts: PostDto[] = [
 type TabType = "opportunities" | "create" | "feed" | "profile" | "analytics";
 
 export default function BusinessConsolePage() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>("opportunities");
 
   // State
@@ -475,70 +535,95 @@ export default function BusinessConsolePage() {
 
   return (
     <div
-      className={`min-h-screen ${isDarkMode ? "dark bg-[#040B14] text-slate-100" : "bg-white text-black"} flex flex-col font-sans transition-colors duration-200`}
+      className={`min-h-screen ${
+        isDarkMode
+          ? "dark bg-[#040B14] text-slate-100"
+          : "bg-slate-50 text-slate-900"
+      } flex flex-col font-sans transition-colors duration-300`}
     >
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A192F] px-4 md:px-8 py-3 flex items-center justify-between shadow-sm">
-        <div className="flex items-center space-x-3">
-          <div className="h-6 w-1.5 bg-[#00A8E8] rounded-full shadow-[0_0_12px_#00A8E8]" />
+      {/* Top Header Navigation */}
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-[#0A192F]/80 backdrop-blur-xl px-6 md:px-10 py-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center space-x-4">
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-[#00A8E8] to-[#007EA7] flex items-center justify-center text-white shadow-lg shadow-[#00A8E8]/30">
+            <Building2 className="h-5 w-5" />
+          </div>
           <div>
-            <span className="text-sm font-bold uppercase tracking-wider text-black dark:text-white block leading-none">
-              {business.companyName}
-            </span>
-            <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-              Employer Console
+            <div className="flex items-center gap-2">
+              <span className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">
+                {business.companyName}
+              </span>
+              <ShieldCheck className="h-4 w-4 text-[#00A8E8]" />
+            </div>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1 block">
+              Employer Enterprise Portal
             </span>
           </div>
         </div>
 
         <button
           onClick={() => setIsDarkMode(!isDarkMode)}
-          className="px-3 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-black dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+          className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
         >
-          {isDarkMode ? "☀️ Light" : "🌙 Dark"}
+          {isDarkMode ? (
+            <Sun className="h-4 w-4 text-amber-400" />
+          ) : (
+            <Moon className="h-4 w-4" />
+          )}
         </button>
       </header>
 
-      {/* Main Layout */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6">
-        {/* Navigation Tabs Bar */}
-        <div className="flex space-x-1 border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#06101E] p-1 rounded-lg w-full md:w-fit overflow-x-auto shadow-inner">
+      {/* Main Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-8">
+        {/* Tab Selection Navigation */}
+        <div className="flex space-x-1 border border-slate-200/80 dark:border-slate-800 bg-slate-200/50 dark:bg-[#06101E]/80 p-1.5 rounded-2xl w-full md:w-fit overflow-x-auto shadow-inner">
           {[
             {
               id: "opportunities",
               label: "My Opportunities",
               count: opportunities.length,
+              icon: Briefcase,
             },
-            { id: "create", label: "+ Post Opportunity" },
-            { id: "analytics", label: "Analytics" },
-            { id: "feed", label: "Campus Feed" },
-            { id: "profile", label: "Company Profile" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id as TabType);
-                setSelectedOpportunity(null);
-              }}
-              className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-4 py-2 text-xs font-bold rounded-md transition-all whitespace-nowrap ${
-                activeTab === tab.id
-                  ? "bg-white dark:bg-[#0A192F] text-[#007EA7] dark:text-[#00A8E8] shadow-sm border border-slate-200 dark:border-slate-800"
-                  : "text-slate-700 dark:text-slate-400 hover:text-black dark:hover:text-slate-200"
-              }`}
-            >
-              <span>{tab.label}</span>
-              {tab.count !== undefined && (
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#00A8E8] text-black font-extrabold">
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          ))}
+            { id: "create", label: "Post Opportunity", icon: PlusCircle },
+            {
+              id: "analytics",
+              label: "Analytics & Performance",
+              icon: TrendingUp,
+            },
+            { id: "feed", label: "Campus Feed", icon: MessageSquare },
+            { id: "profile", label: "Company Profile", icon: Building2 },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id as TabType);
+                  setSelectedOpportunity(null);
+                }}
+                className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-5 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
+                  isActive
+                    ? "bg-white dark:bg-[#0A192F] text-[#007EA7] dark:text-[#00A8E8] shadow-md border border-slate-200/60 dark:border-slate-700"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                }`}
+              >
+                <Icon
+                  className={`h-4 w-4 ${isActive ? "text-[#00A8E8]" : "opacity-70"}`}
+                />
+                <span>{tab.label}</span>
+                {tab.count !== undefined && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#00A8E8] text-white font-extrabold shadow-sm">
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
-        {/* --- TAB 1: OPPORTUNITIES LIST / DETAIL --- */}
+        {/* --- TAB 1: OPPORTUNITIES --- */}
         {activeTab === "opportunities" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div
               className={
                 selectedOpportunity
@@ -550,41 +635,42 @@ export default function BusinessConsolePage() {
                 <CardHeader>
                   <CardTitle>Submitted Opportunities</CardTitle>
                   <CardDescription>
-                    Manage active jobs and check pending admin review status.
+                    Manage active job postings and check approval progress.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-4">
                   {opportunities.length === 0 ? (
-                    <div className="py-8 text-center text-slate-500 text-xs font-bold">
-                      No opportunities created yet.
+                    <div className="py-12 text-center text-slate-500 text-xs font-bold">
+                      No opportunities submitted yet.
                     </div>
                   ) : (
                     opportunities.map((op) => (
                       <div
                         key={op.id}
                         onClick={() => setSelectedOpportunity(op)}
-                        className={`p-4 rounded-lg border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+                        className={`p-5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-4 ${
                           selectedOpportunity?.id === op.id
-                            ? "border-[#00A8E8] bg-slate-50 dark:bg-slate-900/50"
-                            : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#06101E] hover:border-slate-300"
+                            ? "border-[#00A8E8] bg-[#00A8E8]/5 dark:bg-[#00A8E8]/10 shadow-md"
+                            : "border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#06101E] hover:border-slate-300 dark:hover:border-slate-700"
                         }`}
                       >
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <div className="flex items-center justify-between gap-2">
-                            <h4 className="text-sm font-bold text-black dark:text-white truncate">
+                            <h4 className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
                               {op.title}
                             </h4>
                             <Badge status={op.status} />
                           </div>
-                          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium line-clamp-2">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium line-clamp-2 leading-relaxed">
                             {op.description}
                           </p>
                         </div>
 
-                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800/60">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800/80">
                           <span>Target: {op.targetProgramme}</span>
-                          <span className="text-[#007EA7] dark:text-[#00A8E8]">
-                            {op.applicationsCount ?? 0} Applications
+                          <span className="text-[#007EA7] dark:text-[#00A8E8] flex items-center gap-1">
+                            <Users className="h-3.5 w-3.5" />
+                            {op.applicationsCount ?? 0} Applicants
                           </span>
                         </div>
                       </div>
@@ -599,12 +685,12 @@ export default function BusinessConsolePage() {
                 <Card>
                   <CardHeader className="flex flex-row items-start justify-between">
                     <div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-3">
                         <CardTitle>{selectedOpportunity.title}</CardTitle>
                         <Badge status={selectedOpportunity.status} />
                       </div>
                       <CardDescription className="mt-1">
-                        Posted{" "}
+                        Submitted on{" "}
                         {new Date(
                           selectedOpportunity.createdAtUtc,
                         ).toLocaleDateString()}
@@ -619,49 +705,48 @@ export default function BusinessConsolePage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div>
-                      <h5 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                      <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
                         Target Programme
                       </h5>
-                      <p className="text-xs font-semibold text-black dark:text-slate-200">
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                         {selectedOpportunity.targetProgramme}
                       </p>
                     </div>
 
                     <div>
-                      <h5 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                        Description
+                      <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                        Description & Requirements
                       </h5>
-                      <p className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+                      <p className="text-xs font-medium text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
                         {selectedOpportunity.description}
                       </p>
                     </div>
 
-                    <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-                      <h5 className="text-xs font-bold uppercase tracking-wider text-black dark:text-slate-200 mb-3">
-                        Student & Alumni Applications ({mockApplications.length}
-                        )
+                    <div className="pt-6 border-t border-slate-100 dark:border-slate-800/80">
+                      <h5 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200 mb-4">
+                        Applicant Review ({mockApplications.length})
                       </h5>
 
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {mockApplications.map((app) => (
                           <div
                             key={app.id}
-                            className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#06101E] flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                            className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-[#06101E] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                           >
                             <div>
                               <div className="flex items-center space-x-2">
-                                <span className="text-xs font-bold text-black dark:text-white">
+                                <span className="text-xs font-extrabold text-slate-900 dark:text-white">
                                   {app.applicantName}
                                 </span>
-                                <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-black dark:text-slate-300">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                                   {app.applicantRole}
                                 </span>
                               </div>
-                              <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                              <p className="text-[11px] text-slate-500 font-medium mt-1">
                                 {app.programme}
                               </p>
                             </div>
-                            <span className="text-[10px] font-mono text-slate-500">
+                            <span className="text-[11px] font-mono text-slate-400">
                               Applied{" "}
                               {new Date(app.appliedAt).toLocaleDateString()}
                             </span>
@@ -676,20 +761,20 @@ export default function BusinessConsolePage() {
           </div>
         )}
 
-        {/* --- TAB 2: CREATE OPPORTUNITY FORM --- */}
+        {/* --- TAB 2: POST OPPORTUNITY --- */}
         {activeTab === "create" && (
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
               <CardTitle>Post New Opportunity</CardTitle>
               <CardDescription>
-                Submissions are sent for administrator approval before
-                publishing to students and alumni.
+                Submissions are sent for administrative approval before
+                publishing.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleCreateOpportunity} className="space-y-4">
+              <form onSubmit={handleCreateOpportunity} className="space-y-5">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-black dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                     Job / Internship Title
                   </label>
                   <input
@@ -703,12 +788,12 @@ export default function BusinessConsolePage() {
                         title: e.target.value,
                       })
                     }
-                    className="flex h-9 w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-3 py-1 text-xs text-black dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
+                    className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-4 text-xs text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-black dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                     Target Programme
                   </label>
                   <input
@@ -722,12 +807,12 @@ export default function BusinessConsolePage() {
                         targetProgramme: e.target.value,
                       })
                     }
-                    className="flex h-9 w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-3 py-1 text-xs text-black dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
+                    className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-4 text-xs text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-black dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                     Job Description & Requirements
                   </label>
                   <textarea
@@ -741,13 +826,13 @@ export default function BusinessConsolePage() {
                         description: e.target.value,
                       })
                     }
-                    className="flex w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-3 py-2 text-xs text-black dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
+                    className="flex w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] p-4 text-xs text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
                   />
                 </div>
 
-                <div className="pt-2 flex justify-end">
+                <div className="pt-3 flex justify-end">
                   <Button type="submit" className="w-full sm:w-auto">
-                    Submit for Admin Approval
+                    Submit Opportunity
                   </Button>
                 </div>
               </form>
@@ -755,48 +840,198 @@ export default function BusinessConsolePage() {
           </Card>
         )}
 
-        {/* --- TAB 3: BUSINESS ANALYTICS --- */}
+        {/* --- TAB 3: BUSINESS ANALYTICS (RECHARTS INTEGRATED) --- */}
         {activeTab === "analytics" && (
-          <div className="space-y-6">
-            {/* High-Level Metric Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
+          <div className="space-y-8">
+            {/* Metric KPI Cards Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               {[
                 {
                   label: "Active Listings",
                   value: analytics.activeJobListings,
+                  icon: Briefcase,
                 },
-                { label: "Total Listings", value: analytics.totalJobPostings },
+                {
+                  label: "Total Listings",
+                  value: analytics.totalJobPostings,
+                  icon: FileText,
+                },
                 {
                   label: "Total Applicants",
                   value: analytics.totalApplicantsReceived,
+                  icon: Users,
                 },
                 {
-                  label: "Pending Reviews",
+                  label: "Pending Review",
                   value: analytics.pendingApplicantReviews,
+                  icon: Clock,
                 },
                 {
                   label: "Shortlisted",
                   value: analytics.shortlistedCandidatesCount,
+                  icon: CheckCircle2,
                 },
-                { label: "Profile Views", value: analytics.profileViewsCount },
-              ].map((stat, idx) => (
-                <Card key={idx} className="p-4 flex flex-col justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    {stat.label}
-                  </span>
-                  <span className="text-xl md:text-2xl font-extrabold font-mono text-[#007EA7] dark:text-[#00A8E8] mt-2">
-                    {stat.value}
-                  </span>
-                </Card>
-              ))}
+                {
+                  label: "Profile Views",
+                  value: analytics.profileViewsCount,
+                  icon: Eye,
+                },
+              ].map((stat, idx) => {
+                const Icon = stat.icon;
+                return (
+                  <Card key={idx} className="p-5 flex flex-col justify-between">
+                    <div className="flex items-center justify-between text-slate-500">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider">
+                        {stat.label}
+                      </span>
+                      <Icon className="h-4 w-4 text-[#00A8E8]" />
+                    </div>
+                    <span className="text-2xl font-black font-mono text-[#007EA7] dark:text-[#00A8E8] mt-3">
+                      {stat.value}
+                    </span>
+                  </Card>
+                );
+              })}
             </div>
 
-            {/* Top Performing Listings Table */}
+            {/* Recharts Analytics Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Engagement Area Chart */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Application & Impression Growth</CardTitle>
+                  <CardDescription>
+                    6-month analytics breakdown for overall profile views vs
+                    application conversions.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="h-[320px] pt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={engagementTrendData}>
+                      <defs>
+                        <linearGradient
+                          id="colorApps"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#00A8E8"
+                            stopOpacity={0.8}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#00A8E8"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                        <linearGradient
+                          id="colorViews"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#007EA7"
+                            stopOpacity={0.4}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#007EA7"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                      <XAxis
+                        dataKey="month"
+                        stroke="#888888"
+                        fontSize={12}
+                        tickLine={false}
+                      />
+                      <YAxis stroke="#888888" fontSize={12} tickLine={false} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: isDarkMode ? "#0A192F" : "#ffffff",
+                          borderColor: isDarkMode ? "#1e293b" : "#e2e8f0",
+                          borderRadius: "12px",
+                          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                        }}
+                      />
+                      <Legend />
+                      <Area
+                        type="monotone"
+                        dataKey="views"
+                        stroke="#007EA7"
+                        fillOpacity={1}
+                        fill="url(#colorViews)"
+                        name="Profile Impressions"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="applications"
+                        stroke="#00A8E8"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#colorApps)"
+                        name="Submitted Applications"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Applicant Programme Distribution Pie Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Applicants by Faculty</CardTitle>
+                  <CardDescription>
+                    Demographics of candidate academic backgrounds.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="h-[320px] flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={applicantDistributionData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={90}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {applicantDistributionData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: isDarkMode ? "#0A192F" : "#ffffff",
+                          borderColor: isDarkMode ? "#1e293b" : "#e2e8f0",
+                          borderRadius: "12px",
+                        }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Performance Listings Data Table */}
             <Card>
               <CardHeader>
                 <CardTitle>Top Performing Opportunities</CardTitle>
                 <CardDescription>
-                  Listing engagement metrics and total applicants received.
+                  Engagement breakdown per listing.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -804,28 +1039,28 @@ export default function BusinessConsolePage() {
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-                        <th className="pb-3 px-2">Opportunity Title</th>
-                        <th className="pb-3 px-2 text-center">Applicants</th>
-                        <th className="pb-3 px-2">Posted Date</th>
-                        <th className="pb-3 px-2 text-right">Status</th>
+                        <th className="pb-3 px-3">Opportunity Title</th>
+                        <th className="pb-3 px-3 text-center">Applicants</th>
+                        <th className="pb-3 px-3">Posted Date</th>
+                        <th className="pb-3 px-3 text-right">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 font-medium">
                       {analytics.topListings.map((listing) => (
                         <tr
                           key={listing.opportunityId}
                           className="hover:bg-slate-50 dark:hover:bg-slate-900/40"
                         >
-                          <td className="py-3 px-2 font-bold text-black dark:text-white">
+                          <td className="py-4 px-3 font-bold text-slate-900 dark:text-white">
                             {listing.title}
                           </td>
-                          <td className="py-3 px-2 text-center font-mono font-bold text-[#007EA7] dark:text-[#00A8E8]">
+                          <td className="py-4 px-3 text-center font-mono font-extrabold text-[#007EA7] dark:text-[#00A8E8]">
                             {listing.applicantCount}
                           </td>
-                          <td className="py-3 px-2 text-slate-500 font-mono">
+                          <td className="py-4 px-3 text-slate-500 font-mono">
                             {new Date(listing.postedAtUtc).toLocaleDateString()}
                           </td>
-                          <td className="py-3 px-2 text-right">
+                          <td className="py-4 px-3 text-right">
                             <Badge status={listing.status} />
                           </td>
                         </tr>
@@ -840,26 +1075,25 @@ export default function BusinessConsolePage() {
 
         {/* --- TAB 4: CAMPUS FEED --- */}
         {activeTab === "feed" && (
-          <div className="max-w-2xl mx-auto space-y-4">
+          <div className="max-w-2xl mx-auto space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Campus Community Feed</CardTitle>
                 <CardDescription>
-                  Engage with students and alumni by liking and commenting on
-                  campus updates.
+                  Engage directly with students, alumni, and tech initiatives.
                 </CardDescription>
               </CardHeader>
             </Card>
 
             {posts.map((post) => (
               <Card key={post.id}>
-                <CardContent className="p-5 space-y-3">
+                <CardContent className="p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-xs font-bold text-black dark:text-white">
+                      <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">
                         {post.authorName}
                       </h4>
-                      <p className="text-[10px] font-semibold text-slate-500">
+                      <p className="text-[10px] font-semibold text-slate-500 mt-0.5">
                         {post.authorRole}
                       </p>
                     </div>
@@ -872,69 +1106,54 @@ export default function BusinessConsolePage() {
                     {post.content}
                   </p>
 
-                  <div className="flex items-center space-x-3 pt-3 border-t border-slate-100 dark:border-slate-800/60">
+                  <div className="flex items-center space-x-4 pt-3 border-t border-slate-100 dark:border-slate-800/80">
                     <button
                       onClick={() => handleToggleLike(post.id)}
-                      className={`flex items-center space-x-1.5 text-xs font-bold px-2.5 py-1 rounded-md transition-all ${
+                      className={`flex items-center space-x-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
                         post.isLiked
-                          ? "bg-[#00A8E8]/10 text-[#007EA7] dark:text-[#00A8E8]"
-                          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                          ? "bg-[#00A8E8]/10 text-[#00A8E8]"
+                          : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
                       }`}
                     >
-                      <span>{post.isLiked ? "👍 Liked" : "👍 Like"}</span>
-                      <span className="text-[10px] font-mono">
-                        ({post.likeCount})
-                      </span>
+                      <Heart
+                        className={`h-4 w-4 ${post.isLiked ? "fill-current" : ""}`}
+                      />
+                      <span>{post.likeCount}</span>
                     </button>
 
                     <button
                       onClick={() => handleToggleComments(post.id)}
-                      className="flex items-center space-x-1.5 text-xs font-bold px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                      className="flex items-center space-x-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 px-3 py-1.5 rounded-lg transition-all"
                     >
-                      <span>💬 Comments</span>
-                      <span className="text-[10px] font-mono">
-                        ({post.commentCount})
-                      </span>
+                      <MessageSquare className="h-4 w-4" />
+                      <span>{post.commentCount} Comments</span>
                     </button>
                   </div>
 
+                  {/* Comment Section Expansion */}
                   {expandedComments[post.id] && (
-                    <div className="pt-3 space-y-3 border-t border-slate-100 dark:border-slate-800">
-                      {post.comments && post.comments.length > 0 && (
-                        <div className="space-y-2">
-                          {post.comments.map((comment) => (
-                            <div
-                              key={comment.id}
-                              className="p-2.5 rounded-md bg-slate-50 dark:bg-[#06101E] border border-slate-200 dark:border-slate-800 text-xs"
-                            >
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="font-bold text-black dark:text-white text-[11px]">
-                                  {comment.authorName}
-                                </span>
-                                <span className="text-[9px] text-slate-400 font-mono">
-                                  {new Date(
-                                    comment.createdAt,
-                                  ).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
-                                </span>
-                              </div>
-                              <p className="text-slate-700 dark:text-slate-300 font-medium text-[11px]">
-                                {comment.content}
-                              </p>
-                            </div>
-                          ))}
+                    <div className="pt-4 space-y-3 border-t border-slate-100 dark:border-slate-800/80">
+                      {post.comments?.map((comment) => (
+                        <div
+                          key={comment.id}
+                          className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/50 text-xs space-y-1"
+                        >
+                          <span className="font-bold text-slate-900 dark:text-white block">
+                            {comment.authorName}
+                          </span>
+                          <p className="text-slate-700 dark:text-slate-300">
+                            {comment.content}
+                          </p>
                         </div>
-                      )}
+                      ))}
 
                       <form
                         onSubmit={(e) => handleAddComment(post.id, e)}
-                        className="flex items-center gap-2"
+                        className="flex gap-2 pt-2"
                       >
                         <input
                           type="text"
-                          placeholder="Write a reply..."
+                          placeholder="Write a comment..."
                           value={commentInputs[post.id] || ""}
                           onChange={(e) =>
                             setCommentInputs({
@@ -942,14 +1161,11 @@ export default function BusinessConsolePage() {
                               [post.id]: e.target.value,
                             })
                           }
-                          className="flex-1 h-8 rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-3 text-xs text-black dark:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#00A8E8]"
+                          className="flex-1 h-9 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-3 text-xs text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
                         />
-                        <button
-                          type="submit"
-                          className="h-8 px-3 rounded-md bg-[#00A8E8] text-black text-xs font-bold hover:bg-[#0096D1] transition-all shrink-0"
-                        >
-                          Post
-                        </button>
+                        <Button type="submit" className="h-9 px-3">
+                          <Send className="h-3.5 w-3.5" />
+                        </Button>
                       </form>
                     </div>
                   )}
@@ -959,155 +1175,95 @@ export default function BusinessConsolePage() {
           </div>
         )}
 
-        {/* --- TAB 5: PROFILE SECTION & EDIT --- */}
+        {/* --- TAB 5: COMPANY PROFILE --- */}
         {activeTab === "profile" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="h-fit">
-              <CardHeader>
-                <CardTitle>Company Information</CardTitle>
-                <CardDescription>
-                  Public overview as seen by student applicants.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle>Company Profile</CardTitle>
+              <CardDescription>
+                Update official organizational information visible to campus
+                recruits.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpdateProfile} className="space-y-5">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                     Company Name
-                  </span>
-                  <p className="text-sm font-bold text-black dark:text-white">
-                    {business.companyName}
-                  </p>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={profileForm.companyName}
+                    onChange={(e) =>
+                      setProfileForm({
+                        ...profileForm,
+                        companyName: e.target.value,
+                      })
+                    }
+                    className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-4 text-xs text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
+                  />
                 </div>
 
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                     Industry Sector
-                  </span>
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {business.industry}
-                  </p>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={profileForm.industry}
+                    onChange={(e) =>
+                      setProfileForm({
+                        ...profileForm,
+                        industry: e.target.value,
+                      })
+                    }
+                    className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-4 text-xs text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
+                  />
                 </div>
 
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    Official Website
-                  </span>
-                  <p className="text-xs font-mono font-bold text-[#007EA7] dark:text-[#00A8E8] truncate">
-                    <a
-                      href={business.websiteUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="hover:underline"
-                    >
-                      {business.websiteUrl}
-                    </a>
-                  </p>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                    Website URL
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    value={profileForm.websiteUrl}
+                    onChange={(e) =>
+                      setProfileForm({
+                        ...profileForm,
+                        websiteUrl: e.target.value,
+                      })
+                    }
+                    className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-4 text-xs text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
+                  />
                 </div>
 
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                     Registration Number
-                  </span>
-                  <p className="text-xs font-mono font-semibold text-black dark:text-slate-200">
-                    {business.registrationNumber || "Not Provided"}
-                  </p>
+                  </label>
+                  <input
+                    type="text"
+                    value={profileForm.registrationNumber}
+                    onChange={(e) =>
+                      setProfileForm({
+                        ...profileForm,
+                        registrationNumber: e.target.value,
+                      })
+                    }
+                    className="flex h-10 w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-4 text-xs text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
+                  />
                 </div>
-              </CardContent>
-            </Card>
 
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Update Business Details</CardTitle>
-                <CardDescription>
-                  Modify your verified company profile details across the campus
-                  portal.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleUpdateProfile} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-black dark:text-slate-300 mb-1">
-                        Company Name
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={profileForm.companyName}
-                        onChange={(e) =>
-                          setProfileForm({
-                            ...profileForm,
-                            companyName: e.target.value,
-                          })
-                        }
-                        className="flex h-9 w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-3 py-1 text-xs text-black dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-black dark:text-slate-300 mb-1">
-                        Registration Number
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={profileForm.registrationNumber}
-                        onChange={(e) =>
-                          setProfileForm({
-                            ...profileForm,
-                            registrationNumber: e.target.value,
-                          })
-                        }
-                        className="flex h-9 w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-3 py-1 text-xs text-black dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-black dark:text-slate-300 mb-1">
-                      Industry Sector
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={profileForm.industry}
-                      onChange={(e) =>
-                        setProfileForm({
-                          ...profileForm,
-                          industry: e.target.value,
-                        })
-                      }
-                      className="flex h-9 w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-3 py-1 text-xs text-black dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-black dark:text-slate-300 mb-1">
-                      Website URL
-                    </label>
-                    <input
-                      type="url"
-                      required
-                      value={profileForm.websiteUrl}
-                      onChange={(e) =>
-                        setProfileForm({
-                          ...profileForm,
-                          websiteUrl: e.target.value,
-                        })
-                      }
-                      className="flex h-9 w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-[#06101E] px-3 py-1 text-xs text-black dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A8E8]"
-                    />
-                  </div>
-
-                  <div className="pt-2 flex justify-end">
-                    <Button type="submit" className="w-full sm:w-auto">
-                      Save Profile Changes
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
+                <div className="pt-3 flex justify-end">
+                  <Button type="submit">Save Profile Changes</Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         )}
       </main>
     </div>
